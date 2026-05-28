@@ -1,20 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-
-export const NAV_MAIN = [
-  { icon: "dashboard",      label: "Dashboard"           },
-  { icon: "directions_car", label: "Vehicle Management"  },
-  { icon: "person",         label: "Driver Management"   },
-  { icon: "monitor_heart",  label: "Request Monitoring"  },
-  { icon: "calendar_month", label: "Vehicle Schedule"    },
-  { icon: "analytics",      label: "Reports & Analytics" },
-];
-export const NAV_ADMIN = [
-  { icon: "group",                label: "User Management"     },
-  { icon: "admin_panel_settings", label: "Role Management"     },
-  { icon: "notifications",        label: "Notification Center" },
-  { icon: "history",              label: "Audit Logs"          },
-  { icon: "settings",             label: "System Settings"     },
-];
+import { NAV_MAIN, NAV_ADMIN } from "./navData";
 
 export function Icon({ name, className = "", style }: { name: string; className?: string; style?: CSSProperties }) {
   return (
@@ -61,15 +46,15 @@ export function Sidebar({ activeNav, onNavigate }: { activeNav: string; onNaviga
   );
 }
 
-export function Topbar({ title, userName = "Admin User", userRole = "Fleet Supervisor", searchPlaceholder = "Quick search..." }:
-  { title: string; userName?: string; userRole?: string; searchPlaceholder?: string }) {
+export function Topbar({ title, userName = "Admin User", userRole = "Administrator", searchPlaceholder = "Quick search...", searchValue, onSearchChange }:
+  { title: string; userName?: string; userRole?: string; searchPlaceholder?: string; searchValue?: string; onSearchChange?: (value: string) => void }) {
   return (
     <header className="bg-white border-b border-[#e2e8f0] px-8 h-[68px] flex items-center justify-between flex-shrink-0 shadow-sm">
       <div className="flex items-center gap-6">
         <h1 className="text-[18px] font-bold text-[#0f172a]">{title}</h1>
         <div className="relative">
           <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] text-[18px]" />
-          <input type="text" placeholder={searchPlaceholder}
+          <input type="text" value={searchValue} onChange={e => onSearchChange?.(e.target.value)} placeholder={searchPlaceholder}
             className="h-9 pl-9 pr-4 bg-[#f8fafc] border border-[#e2e8f0] rounded-full text-[13px] text-[#475569] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]/20 w-56" />
         </div>
       </div>
@@ -97,13 +82,13 @@ export function Topbar({ title, userName = "Admin User", userRole = "Fleet Super
   );
 }
 
-export function Layout({ activeNav, onNavigate, topbarTitle, userName, userRole, searchPlaceholder, children }:
-  { activeNav: string; onNavigate?: (p:string)=>void; topbarTitle: string; userName?: string; userRole?: string; searchPlaceholder?: string; children: ReactNode }) {
+export function Layout({ activeNav, onNavigate, topbarTitle, userName, userRole, searchPlaceholder, searchValue, onSearchChange, children }:
+  { activeNav: string; onNavigate?: (p:string)=>void; topbarTitle: string; userName?: string; userRole?: string; searchPlaceholder?: string; searchValue?: string; onSearchChange?: (value: string) => void; children: ReactNode }) {
   return (
     <div className="flex h-screen bg-[#f1f5f9] overflow-hidden animate-fadein" style={{ fontFamily:"'Inter',sans-serif" }}>
       <Sidebar activeNav={activeNav} onNavigate={onNavigate} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Topbar title={topbarTitle} userName={userName} userRole={userRole} searchPlaceholder={searchPlaceholder} />
+        <Topbar title={topbarTitle} userName={userName} userRole={userRole} searchPlaceholder={searchPlaceholder} searchValue={searchValue} onSearchChange={onSearchChange} />
         <div className="flex-1 overflow-y-auto">
           {children}
         </div>
@@ -125,4 +110,3 @@ export function Layout({ activeNav, onNavigate, topbarTitle, userName, userRole,
     </div>
   );
 }
-"Layout.tsx done"

@@ -1,17 +1,17 @@
 import { useState } from "react";
-import type { SystemConfig, SystemNotification, AuditLog } from "./types/types";
+import type { SystemConfig, SystemNotification, AuditLog } from "./types";
 import { initialNotifications, initialAuditLogs, initialSystemConfig } from "./mockData";
-import AuditLogsView from "./components/dashboard/AuditLogsView";
-import DashboardView from "./components/dashboard/DashboardView";
-import DriverView from "./components/dashboard/DriverView";
-import NotificationCenterView from "./components/dashboard/NotificationCenterView";
-import ReportsView from "./components/dashboard/ReportsView";
-import RequestView from "./components/request/RequestView";
-import RoleManagementView from "./components/dashboard/RoleManagementView";
-import ScheduleView from "./components/dashboard/ScheduleView";
-import SystemSettingsView from "./components/dashboard/SystemSettingsView";
-import UserManagementView from "./components/dashboard/UserManagementView";
-import VehicleView from "./components/dashboard/vehicle/VehicleView";
+import Audit from "./pages/Audit";
+import Dashboard from "./pages/Dashboard";
+import Driver from "./pages/Driver";
+import Notification from "./pages/Notification";
+import Reports from "./pages/Reports";
+import Request from "./pages/Request";
+import Role from "./pages/Role";
+import Schedule from "./pages/Schedule";
+import System from "./pages/System";
+import User from "./pages/User";
+import Vehicle from "./pages/Vehicle";
 
 type Page =
   | "Dashboard"
@@ -82,34 +82,35 @@ export default function App() {
   // Render halaman sesuai currentPage
   switch (currentPage) {
     case "Dashboard":
-      return <DashboardView onNavigate={navigate} />;
+      return <Dashboard onNavigate={navigate} />;
     case "Vehicle Management":
-      return <VehicleView onNavigate={navigate} />;
+      return <Vehicle onNavigate={navigate} />;
     case "Driver Management":
-      return <DriverView onNavigate={navigate} />;
+      return <Driver onNavigate={navigate} />;
     case "Request Monitoring":
-      return <RequestView onNavigate={navigate} />;
+      return <Request onNavigate={navigate} />;
     case "Vehicle Schedule":
-      return <ScheduleView onNavigate={navigate} />;
+      return <Schedule onNavigate={navigate} />;
     case "Reports & Analytics":
-      return <ReportsView onNavigate={navigate} />;
+      return <Reports onNavigate={navigate} />;
     case "User Management":
-      return <UserManagementView onNavigate={navigate} />;
+      return <User onNavigate={navigate} />;
     case "Role Management":
-      return <RoleManagementView onNavigate={navigate} />;
+      return <Role onNavigate={navigate} />;
     case "Notification Center":
       return (
-        <NotificationCenterView
+        <Notification
           notifications={notifications}
           onMarkAsRead={handleMarkAsRead}
           onMarkAllAllAsRead={handleMarkAllAsRead}
           onDeleteNotification={handleDeleteNotification}
+          onNavigate={navigate}
         />
       );
     case "Audit Logs":
-      return <AuditLogsView logs={auditLogs} />;
+      return <Audit logs={auditLogs} onNavigate={navigate} />;
     case "System Settings":
-      return <SystemSettingsView config={systemConfig} onSaveConfig={handleSaveSystemConfig} />;
+      return <System config={systemConfig} onSaveConfig={handleSaveSystemConfig} onNavigate={navigate} />;
     default:
       return (
         <div className="flex h-screen">

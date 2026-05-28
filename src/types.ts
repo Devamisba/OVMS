@@ -18,7 +18,7 @@ export interface Vehicle {
   type: string;
   driverId: string;
   driverName: string;
-  status: "AVAILABLE" | "IN TRANSIT" | "MAINTENANCE" | "WARNING" | "OUT_OF_SERVICE";
+  status: "AVAILABLE" | "IN TRANSIT";
   battery: number; // percentage
   fuelType: "Electric" | "Diesel" | "Hybrid" | "Gasoline";
   odometer: number; // km
@@ -30,7 +30,7 @@ export interface Vehicle {
 export interface Driver {
   id: string;
   name: string;
-  status: "AVAILABLE" | "ON DUTY" | "OFF DUTY" | "LEAVE";
+  status: "AVAILABLE" | "ON DUTY" | "OFF DUTY" ;
   licenseType: "Class A" | "Class B" | "Class C";
   licenseExpiry: string;
   performance: number; // e.g. 4.8
@@ -58,7 +58,7 @@ export interface ScheduleItem {
   id: string;
   vehicleId: string;
   vehicleLabel: string;
-  type: "Regular Mission" | "Maintenance" | "Recurring" | "Collision Conflict";
+  type: "Regular Mission" | "Recurring" ;
   title: string;
   driverName: string;
   startTime: string; // e.g. "09:00"
@@ -72,7 +72,7 @@ export interface ScheduleConflict {
   vehicleLabel: string;
   title: string;
   description: string;
-  type: "overlap" | "unassigned" | "maintenance_due";
+  type: "overlap" | "unassigned" ;
   severity: "critical" | "warning" | "info";
   actionRequired: boolean;
 }
@@ -83,7 +83,7 @@ export interface SystemNotification {
   description: string;
   timeAgo: string;
   severity: "critical" | "high" | "medium" | "low" | "info";
-  category: "Operational" | "Approvals" | "Maintenance" | "Security" | "Announcements" | "System";
+  category: "Operational" | "Approvals" | "Security" | "Announcements" | "System";
   isRead: boolean;
   metadata?: string;
   userInitiated?: string;
@@ -95,7 +95,7 @@ export interface AuditLog {
   role: string;
   activityType: string;
   action: string;
-  module: string;
+  department: string;
   severity: "Critical" | "High" | "Normal" | "Low" | "Stable";
   ipAddress: string;
   timestamp: string;
