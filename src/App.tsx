@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { SystemConfig, SystemNotification, AuditLog } from "./types";
-import { initialNotifications, initialAuditLogs, initialSystemConfig } from "./mockData";
+import type { SystemNotification } from "./types/index";
+import { initialNotifications } from "./mocks/data/notifications";
 import Audit from "./pages/Audit";
 import Dashboard from "./pages/Dashboard";
 import Driver from "./pages/Driver";
@@ -54,8 +54,7 @@ function ComingSoon({ page, onNavigate }: { page: string; onNavigate: (p: string
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>("Dashboard");
   const [notifications, setNotifications] = useState<SystemNotification[]>(initialNotifications);
-  const [auditLogs] = useState<AuditLog[]>(initialAuditLogs);
-  const [systemConfig, setSystemConfig] = useState<SystemConfig>(initialSystemConfig);
+
 
   const navigate = (page: string) => {
     setCurrentPage(page as Page);
@@ -75,9 +74,7 @@ export default function App() {
     setNotifications((current) => current.filter((notification) => notification.id !== id));
   };
 
-  const handleSaveSystemConfig = (updated: SystemConfig) => {
-    setSystemConfig(updated);
-  };
+
 
   // Render halaman sesuai currentPage
   switch (currentPage) {
@@ -108,9 +105,9 @@ export default function App() {
         />
       );
     case "Audit Logs":
-      return <Audit logs={auditLogs} onNavigate={navigate} />;
+      return <Audit onNavigate={navigate} />;
     case "System Settings":
-      return <System config={systemConfig} onSaveConfig={handleSaveSystemConfig} onNavigate={navigate} />;
+      return <System onNavigate={navigate} />;
     default:
       return (
         <div className="flex h-screen">

@@ -22,11 +22,11 @@ function DonutChart() {
   const approved = circ*0.69, pending = circ*0.19, rejected = circ*0.12;
   return (
     <svg viewBox="0 0 160 160" width="160" height="160">
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#fecdd3" strokeWidth={stroke}
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#FF0000" strokeWidth={stroke}
         strokeDasharray={`${rejected} ${circ}`} strokeDashoffset={0} transform={`rotate(-90 ${cx} ${cy})`} />
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#93c5fd" strokeWidth={stroke}
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#FF9D23" strokeWidth={stroke}
         strokeDasharray={`${pending} ${circ}`} strokeDashoffset={-rejected} transform={`rotate(-90 ${cx} ${cy})`} />
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1e3a8a" strokeWidth={stroke}
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#16a34a" strokeWidth={stroke}
         strokeDasharray={`${approved} ${circ}`} strokeDashoffset={-(rejected+pending)} transform={`rotate(-90 ${cx} ${cy})`} />
       <text x={cx} y={cy-6} textAnchor="middle" fontSize="22" fontWeight="800" fill="#0f172a" fontFamily="Inter,sans-serif">842</text>
       <text x={cx} y={cy+12} textAnchor="middle" fontSize="10" fontWeight="600" fill="#94a3b8" fontFamily="Inter,sans-serif">TOTAL</text>
@@ -41,7 +41,7 @@ export default function Reports({ onNavigate }: { onNavigate?: (p:string)=>void 
   const [generated, setGenerated] = useState(false);
 
   return (
-    <Layout activeNav="Reports & Analytics" onNavigate={onNavigate} topbarTitle="Reports & Analytics" searchPlaceholder="Quick search resources..." userRole="Administrator">
+    <Layout activeNav="Reports & Analytics" onNavigate={onNavigate} topbarTitle="Reports & Analytics" searchPlaceholder="Search reports..." userRole="Administrator">
       <div className="p-6 space-y-5 animate-fadein">
         {/* Header */}
         <div className="flex items-start justify-between flex-wrap gap-3">
@@ -97,14 +97,13 @@ export default function Reports({ onNavigate }: { onNavigate?: (p:string)=>void 
         {/* Mini KPI Cards */}
         <div className="grid grid-cols-6 gap-3">
           {[
-            { label:"Vehicle Usage", value:"12,480", unit:"hrs", trend:"+12%", up:true,  vals:[60,70,55,80,65,90,100], color:"bg-[#bfdbfe]" },
-            { label:"Requests",      value:"842",    unit:"",    trend:"+8.4%",up:true,  vals:[50,60,55,70,65,80,75],  color:"bg-[#bfdbfe]" },
-            { label:"Avg Utilization",value:"76.4",  unit:"%",   trend:"-2.1%", up:false, vals:[80,75,70,65,72,68,76], color:"bg-[#bfdbfe]" },
+            { label:"Vehicle Usage", value:"12,480", unit:"hrs", vals:[60,70,55,80,65,90,100], color:"bg-[#bfdbfe]" },
+            { label:"Requests",      value:"842",    unit:"",    vals:[50,60,55,70,65,80,75],  color:"bg-[#bfdbfe]" },
+            { label:"Avg Utilization",value:"76.4",  unit:"%",   vals:[80,75,70,65,72,68,76], color:"bg-[#bfdbfe]" },
           ].map(c => (
             <div key={c.label} className="bg-white rounded-2xl p-4 border border-[#e2e8f0] shadow-sm hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] leading-tight">{c.label}</div>
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${c.up?"bg-[#dcfce7] text-[#16a34a]":"bg-[#fee2e2] text-[#dc2626]"}`}>{c.trend}</span>
               </div>
               <div className="mt-2 text-[20px] font-bold text-[#0f172a] leading-tight">{c.value}<span className="text-[13px] text-[#94a3b8] font-medium ml-0.5">{c.unit}</span></div>
               <MiniBar vals={c.vals} color={c.color} />
@@ -150,9 +149,9 @@ export default function Reports({ onNavigate }: { onNavigate?: (p:string)=>void 
             <div className="flex justify-center"><DonutChart /></div>
             <div className="mt-4 space-y-2">
               {[
-                { label:"Approved", count:"580 (69%)", color:"bg-[#1e3a8a]" },
-                { label:"Pending",  count:"162 (19%)", color:"bg-[#93c5fd]" },
-                { label:"Rejected", count:"100 (12%)", color:"bg-[#fecdd3]" },
+                { label:"Approved", count:"580 (69%)", color:"bg-[#16a34a]" },
+                { label:"Pending",  count:"162 (19%)", color:"bg-[#FF9D23]" },
+                { label:"Rejected", count:"100 (12%)", color:"bg-[#FF0000]" },
               ].map(item=>(
                 <div key={item.label} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">

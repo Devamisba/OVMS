@@ -54,7 +54,6 @@ function SectionCard({ title, subtitle, children }: { title: string; subtitle: s
 }
 
 export default function SystemSettingsView({ onNavigate }: { onNavigate?: (p: string) => void }) {
-  const [activeNav,     setActiveNav]     = useState("System Settings");
   const [activeSection, setActiveSection] = useState("Company Info");
   const [saved,         setSaved]         = useState(false);
   const [resetDone,     setResetDone]     = useState(false);
@@ -91,16 +90,15 @@ export default function SystemSettingsView({ onNavigate }: { onNavigate?: (p: st
   const [backupFreq,   setBackupFreq]   = useState("Every 6 Hours");
   const [retentionDays,setRetentionDays]= useState("30 Days");
 
-  const handleNav = (label: string) => { setActiveNav(label); onNavigate?.(label); };
   const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2500); };
   const handleReset = () => { setResetDone(true); setTimeout(() => setResetDone(false), 2000); };
 
   return (
     <Layout
-      activeNav={activeNav}
-      onNavigate={handleNav}
+      activeNav="System Settings"
+      onNavigate={onNavigate}
       topbarTitle="System Settings"
-      searchPlaceholder="Quick search settings..."
+      searchPlaceholder="Search settings..."
       userName="Admin User"
       userRole="Administrator"
     >

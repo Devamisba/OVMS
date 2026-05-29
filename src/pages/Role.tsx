@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Layout, Icon } from "../components/layout/layout.tsx";
 const ROLES = [
-  { icon:"gavel",      label:"Approver",         sub:"Financial & asset approvals" },
-  { icon:"admin_panel_settings",label:"Administrator",sub:"Full system access & control" },
-  { icon:"directions_car",label:"Driver",         sub:"Vehicle data access only" },
-  { icon:"work",       label:"Employee",          sub:"Standard view permissions" },
+  { icon:"gavel",                   label:"Approver",         sub:"Financial & asset approvals" },
+  { icon:"admin_panel_settings",    label:"Administrator",    sub:"Full system access & control" },
+  { icon:"directions_car",          label:"Driver",           sub:"Vehicle data access only" },
+  { icon:"work",                    label:"Employee",         sub:"Standard view permissions" },
 ];
 
 const MODULES = ["Dashboard","Vehicles","Requests","Reports"];
-const ACTIONS = ["VIEW","CREATE","EDIT","DELETE","APPROVE","EXPORT","MANAGE"];
+const ACTIONS = ["VIEW","CREATE","EDIT","DELETE","APPROVE","MANAGE"];
 
 const DEFAULT_PERMS: Record<string, Record<string, boolean>> = {
   Dashboard: { VIEW:true, CREATE:false, EDIT:false, DELETE:false, APPROVE:false, EXPORT:false, MANAGE:true },
@@ -35,7 +35,7 @@ export default function Role({ onNavigate }: { onNavigate?: (p:string)=>void }) 
   };
 
   return (
-    <Layout activeNav="Role Management" onNavigate={onNavigate} topbarTitle="Role Management" searchPlaceholder="Quick search schedules..." userName="Admin User" userRole="Administrator">
+    <Layout activeNav="Role Management" onNavigate={onNavigate} topbarTitle="Role Management" searchPlaceholder="Search roles..." userName="Admin User" userRole="Administrator">
       <div className="p-6 space-y-5 animate-fadein pb-12">
         {/* Header */}
         <div className="flex items-start justify-between">
@@ -44,7 +44,6 @@ export default function Role({ onNavigate }: { onNavigate?: (p:string)=>void }) 
             <p className="text-[13px] text-[#64748b] mt-1">Manage system roles, permissions, and access control across the enterprise.</p>
           </div>
           <div className="flex gap-2.5">
-            <button className="flex items-center gap-2 h-10 px-4 border border-[#e2e8f0] bg-white rounded-xl text-[13px] font-bold text-[#475569] hover:bg-[#f8fafc] shadow-sm"><Icon name="ios_share" className="text-[17px]" />Export</button>
             <button onClick={()=>setSaved(true)} className="flex items-center gap-2 h-10 px-5 bg-[#1e3a8a] hover:bg-[#1e40af] text-white rounded-xl text-[13px] font-bold shadow-sm active:scale-95 transition-all">
               <Icon name="save" className="text-[17px]" />{saved?"Changes Saved!":"Save Changes"}
             </button>

@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Layout, Icon } from "../components/layout/layout.tsx";
+import { useApi } from "../hooks/useApi";
+import { scheduleService } from "../services/scheduleService";
 
 // ── Gantt data ──
 const WEEK_DAYS = [
@@ -12,35 +14,29 @@ const WEEK_DAYS = [
   { short: "Sun", day: "18" },
 ];
 
-type BlockType = "mission" | "recurring" | string;
-interface GanttBlock { start: number; span: number; type: BlockType; label: string; sub: string; icon?: string; hasMenu?: boolean; conflict?: boolean }
+type BlockType = "normal" | "urgent" | "critical" | string;
+interface GanttBlock { start: number; span: number; type: BlockType; label: string; sub: string; requestorName?: string; purpose?: string; approved?: boolean; icon?: string; hasMenu?: boolean; conflict?: boolean }
 interface Vehicle    { id: string; type: string; model: string; blocks: GanttBlock[] }
 
 const VEHICLES: Vehicle[] = [
   {
     id: "V-8829", type: "Sedan", model: "T. Camry",
     blocks: [
-      { start: 0, span: 1, type: "mission",  label: "#REQ-294 • John D.", sub: "REGIONAL HQ TRANSFER", hasMenu: true },
-      { start: 1, span: 2, type: "mission",  label: "#REQ-301 • Sa...",   sub: "CLIENT SITE B...",     hasMenu: true },
+      { start: 0, span: 1, type: "normal",  label: "#REQ-294", sub: "REGIONAL HQ TRANSFER", requestorName: "John D.", purpose: "Transfer to regional HQ", approved: true, hasMenu: true },
+      { start: 1, span: 2, type: "normal",  label: "#REQ-301", sub: "CLIENT SITE B...",     requestorName: "Samantha A.", purpose: "Client visit", approved: true, hasMenu: true },
     ],
   },
   {
     id: "V-1104", type: "SUV", model: "F. Explorer",
     blocks: [
-      { start: 1, span: 2, type: "mission", label: "#REQ-28", sub: "Training" },
-    ],
-  },
-  {
-    id: "V-5521", type: "Van", model: "M. Sprinter",
-    blocks: [
-      { start: 0, span: 5, type: "recurring", label: "RECURRING: STAFF SHUTTLE (ROUTE A)", sub: "", icon: "autorenew" },
+      { start: 1, span: 2, type: "normal", label: "#REQ-028", sub: "Training", requestorName: "Training Dept", purpose: "On-site training", approved: true },
     ],
   },
   {
     id: "V-9011", type: "Sedan", model: "T. Camry",
     blocks: [
-      { start: 0, span: 1, type: "mission",  label: "#REQ-294 • John D.", sub: "REGIONAL HQ TRANSFER", hasMenu: true, conflict: true },
-      { start: 1, span: 2, type: "mission",  label: "#REQ-301 • Sa...",   sub: "CLIENT SITE B...",     hasMenu: true },
+      { start: 0, span: 1, type: "critical", label: "#REQ-294", sub: "REGIONAL HQ TRANSFER", requestorName: "John D.", purpose: "Emergency transfer", approved: true, hasMenu: true, conflict: true },
+      { start: 1, span: 2, type: "urgent",  label: "#REQ-301", sub: "CLIENT SITE B...",     requestorName: "Samantha A.", purpose: "Client visit", approved: true, hasMenu: true },
     ],
   },
   {
@@ -52,8 +48,9 @@ const VEHICLES: Vehicle[] = [
 ];
 
 const BLOCK_STYLES: Record<string, string> = {
-  mission:   "bg-[#1e3a8a] text-white",
-  recurring: "bg-[#c2410c] text-white",
+  normal:   "bg-[#1e3a8a] text-white",
+  urgent:   "bg-[#f97316] text-white",
+  critical: "bg-[#ef4444] text-white",
 };
 
 // ── Gantt Row ──
@@ -85,8 +82,8 @@ function GanttRow({ vehicle }: { vehicle: Vehicle }) {
           ))}
         </div>
 
-        {/* Blocks (exclude service/conflict) */}
-        {vehicle.blocks.filter(b => b.type === "mission" || b.type === "recurring").map((block, bi) => (
+        {/* Blocks (only approved requests, exclude service/conflict) */}
+        {vehicle.blocks.filter(b => (b.type === "normal" || b.type === "urgent" || b.type === "critical") && b.approved === true).map((block, bi) => (
           <div
             key={bi}
             className={`absolute top-2 rounded-lg flex items-center overflow-hidden shadow-sm ${BLOCK_STYLES[block.type]}`}
@@ -99,10 +96,10 @@ function GanttRow({ vehicle }: { vehicle: Vehicle }) {
             <div className="flex-1 min-w-0 px-2.5 py-1">
               <div className="flex items-center gap-1">
                 {block.icon && <Icon name={block.icon} className="text-[13px] text-white/80" />}
-                <span className="text-[11px] font-bold truncate">{block.label}</span>
+                <span className="text-[11px] font-bold truncate">{block.requestorName || block.label}</span>
               </div>
-              {block.sub && (
-                <span className="text-[9px] font-semibold tracking-wider opacity-75 uppercase truncate block">{block.sub}</span>
+              {(block.purpose || block.sub) && (
+                <span className="text-[9px] font-semibold tracking-wider opacity-75 uppercase truncate block">{block.purpose || block.sub}</span>
               )}
             </div>
             {block.hasMenu && (
@@ -122,16 +119,78 @@ export default function Schedule({ onNavigate }: { onNavigate?: (page: string) =
   const [filterOpen, setFilterOpen] = useState(false);
   const [vehicleType, setVehicleType] = useState("All");
 
+  // fetch schedule items from backend (preferred integration) and merge into vehicle schedule
+  const { data: scheduleItems, loading: reqLoading, error: reqError, refetch: refetchRequests } = useApi(async () => {
+    const res = await scheduleService.getAll();
+    return { data: res.data };
+  }, true, []);
+
+  const mergedVehicles = useMemo(() => {
+    // start from a deep-ish copy of VEHICLES to avoid mutating the constant
+    const base = VEHICLES.map(v => ({ ...v, blocks: [...v.blocks] }));
+
+    if (!scheduleItems) return base;
+
+    // scheduleItems expected shape: ScheduleItem { id, vehicleId?, vehicleLabel?, type, title, driverName, startTime, endTime, dateLabel }
+    scheduleItems.forEach((it: any) => {
+      // dateLabel may be like "Mon 12" or "12"; try to find by day number first, then by weekday
+      const dateLabel = String(it.dateLabel || "").trim();
+      let start = 0;
+      if (dateLabel) {
+        const parts = dateLabel.split(" ");
+        const maybeDay = parts[parts.length - 1];
+        const idxByDay = WEEK_DAYS.findIndex(w => w.day === maybeDay);
+        if (idxByDay >= 0) start = idxByDay;
+        else {
+          const idxByShort = WEEK_DAYS.findIndex(w => w.short.toLowerCase() === (parts[0] || "").toLowerCase());
+          if (idxByShort >= 0) start = idxByShort;
+        }
+      }
+
+      const span = 1;
+      const type = (it.type && it.type.toLowerCase().includes("regular")) ? "normal" : "normal";
+      const block = {
+        start,
+        span,
+        type,
+        label: it.id || it.title || `SCH-${Math.floor(Math.random()*1000)}`,
+        sub: it.driverName || it.vehicleLabel || "",
+        requestorName: it.title || it.driverName,
+        purpose: it.title || it.driverName,
+        approved: true,
+        hasMenu: false,
+      } as GanttBlock;
+
+      // attach by vehicleId first, then vehicleLabel, else UNASSIGNED
+      let attached = false;
+      if (it.vehicleId) {
+        const idx = base.findIndex(v => v.id === it.vehicleId);
+        if (idx >= 0) { base[idx].blocks.push(block); attached = true; }
+      }
+      if (!attached && it.vehicleLabel) {
+        const idx = base.findIndex(v => v.model && String(it.vehicleLabel).toLowerCase().includes(v.model.toLowerCase()));
+        if (idx >= 0) { base[idx].blocks.push(block); attached = true; }
+      }
+      if (!attached) {
+        let un = base.find(v => v.id === "UNASSIGNED");
+        if (!un) { un = { id: "UNASSIGNED", type: "Unassigned", model: "Unassigned", blocks: [] }; base.push(un); }
+        un.blocks.push(block);
+      }
+    });
+
+    return base;
+  }, [scheduleItems]);
+
   const filteredVehicles = vehicleType === "All"
-    ? VEHICLES
-    : VEHICLES.filter(v => v.type.toLowerCase() === vehicleType.toLowerCase());
+    ? mergedVehicles
+    : mergedVehicles.filter(v => v.type.toLowerCase() === vehicleType.toLowerCase());
 
   return (
     <Layout
       activeNav="Vehicle Schedule"
       onNavigate={onNavigate}
       topbarTitle="Vehicle Schedule"
-      searchPlaceholder="Quick search schedules..."
+      searchPlaceholder="Search schedules..."
     >
       <div className="p-6 space-y-5 animate-fadein">
         {/* Page header */}
@@ -143,10 +202,6 @@ export default function Schedule({ onNavigate }: { onNavigate?: (page: string) =
             </p>
           </div>
           <div className="flex items-center gap-2.5 flex-shrink-0">
-            <button className="flex items-center gap-2 px-4 py-2.5 border border-[#e2e8f0] rounded-xl text-[13px] font-bold text-[#1e3a8a] bg-white hover:bg-[#eff6ff] transition-colors shadow-sm">
-              <Icon name="ios_share" className="text-[18px]" />
-              Export
-            </button>
             <button className="flex items-center gap-2 px-5 py-2.5 bg-[#1e3a8a] hover:bg-[#1e40af] text-white rounded-xl text-[13px] font-bold shadow-sm transition-colors">
               <Icon name="add" className="text-[18px]" />
               New Schedule
@@ -162,9 +217,6 @@ export default function Schedule({ onNavigate }: { onNavigate?: (page: string) =
               <div className="w-10 h-10 bg-[#e8edf8] rounded-xl flex items-center justify-center">
                 <Icon name="calendar_today" className="text-[#1e3a8a] text-[20px]" />
               </div>
-              <span className="text-[11px] font-bold text-[#16a34a] bg-[#dcfce7] px-2 py-0.5 rounded-full">
-                +12% vs yest.
-              </span>
             </div>
             <div className="text-[10px] font-bold uppercase tracking-widest text-[#94a3b8] mb-1">Scheduled Today</div>
             <div className="text-[32px] font-bold text-[#0f172a] leading-tight">24</div>
@@ -237,6 +289,19 @@ export default function Schedule({ onNavigate }: { onNavigate?: (page: string) =
           </div>
 
           {/* Gantt table */}
+          {reqLoading && (
+            <div className="px-5 py-3 text-[13px] text-[#475569] flex items-center gap-2">
+              <Icon name="hourglass_top" className="text-[18px] text-[#1e3a8a]" />
+              Loading approved requests...
+            </div>
+          )}
+          {reqError && (
+            <div className="px-5 py-3 text-[13px] text-[#b91c1c] flex items-center justify-between">
+              <div className="flex items-center gap-2"><Icon name="error" className="text-red-600 text-[18px]" />Failed loading requests. Please try again.</div>
+              <button onClick={() => refetchRequests()} className="ml-4 px-3 py-1.5 bg-[#1e3a8a] text-white rounded-lg">Retry</button>
+            </div>
+          )}
+
           <div className="overflow-x-auto">
             {/* Header */}
             <div className="flex border-b border-[#f1f5f9] bg-[#f8fafc]">
@@ -263,8 +328,9 @@ export default function Schedule({ onNavigate }: { onNavigate?: (page: string) =
           {/* Legend */}
           <div className="px-5 py-3 border-t border-[#f1f5f9] bg-[#fafbfc] flex items-center gap-5 flex-wrap">
             {[
-              { color: "bg-[#1e3a8a]", label: "Regular Mission" },
-              { color: "bg-[#c2410c]", label: "Recurring" },
+              { color: "bg-[#1e3a8a]", label: "Normal Schedule" },
+              { color: "bg-[#f97316]", label: "Urgent Schedule" },
+              { color: "bg-[#ef4444]", label: "Critical Schedule" },
             ].map(item => (
               <div key={item.label} className="flex items-center gap-2">
                 <span className={`w-2.5 h-2.5 rounded-sm ${item.color}`} />

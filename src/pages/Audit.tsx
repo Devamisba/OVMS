@@ -1,59 +1,9 @@
 import { useState } from "react";
 import { Layout, Icon } from "../components/layout/layout.tsx";
+import { useApi } from "../hooks/useApi";
+import { auditLogService } from "../services/auditLogService";
 
-
-/* ─────────────────────────────────────────────
-   AuditLogsView.tsx  —  OVMS Audit Logs Page
-   Usage: <AuditLogsView onNavigate={fn} />
-   Deps : Tailwind CSS + Material Symbols font
-─────────────────────────────────────────────── */
-
-// ── Nav data ─────────────────────────────────
-// ── Log data ──────────────────────────────────
-const ALL_LOGS = [
-  {
-    id: "#EV-92831",
-    name: "Marcus Chen",    role: "Administrator",   img: "https://i.pravatar.cc/36?img=33",
-    activity: "Vehicle Deletion", action: "Permanent Removal",
-    department: "IT", severity: "Critical", email: "marcus.chen@ovmsfleet.com",
-    time: "Just now",
-  },
-  {
-    id: "#EV-92830",
-    name: "Sarah Jenkins",  role: "Administrator",   img: "https://i.pravatar.cc/36?img=44",
-    activity: "Permission Change", action: "Grant Admin Role",
-    department: "FA",   severity: "High",     email: "sarah.jenkins@ovmsfleet.com",
-    time: "5m ago",
-  },
-  {
-    id: "#EV-92829",
-    name: "David Miller",   role: "Approver",      img: "https://i.pravatar.cc/36?img=55",
-    activity: "Schedule Update", action: "Route Modified",
-    department: "QA",  severity: "Medium",   email: "david.miller@ovmsfleet.com",
-    time: "12m ago",
-  },
-  {
-    id: "#EV-92828",
-    name: "System Automator", role: "Internal Bot",  img: "",
-    activity: "Database Sync", action: "Periodic Backup",
-    department: "HRD & GA",     severity: "Low",      email: "system.automator@ovmsfleet.com",
-    time: "18m ago",
-  },
-  {
-    id: "#EV-92827",
-    name: "Elena Rodriguez", role: "Driver",         img: "https://i.pravatar.cc/36?img=66",
-    activity: "Login Attempt", action: "Successful Login",
-    department: "Production",       severity: "Low",      email: "elena.rodriguez@ovmsfleet.com",
-    time: "25m ago",
-  },
-  {
-    id: "#EV-92826",
-    name: "k.thompson",     role: "Unknown",         img: "",
-    activity: "Login Failed", action: "Wrong Password",
-    department: "Engineering",       severity: "Critical", email: "kt@ovmsfleet.com",
-    time: "32m ago",
-  },
-];
+// Audit logs will be loaded from backend via `auditLogService.getAll()`
 
 // ── Severity styling ──────────────────────────
 const SEV: Record<string, { badge: string; dot: string; row: string }> = {
@@ -109,7 +59,6 @@ function Avatar({ name, img }: { name: string; img: string }) {
 
 // ── Main Component ────────────────────────────
 export default function AuditLogsView({ onNavigate }: { onNavigate?: (p: string) => void }) {
-  const [activeNav,    setActiveNav]    = useState("Audit Logs");
   const [severityF,    setSeverityF]    = useState("All");
   const [userRoleF,    setUserRoleF]    = useState("All");
   const [departmentF,  setDepartmentF]  = useState("All");
@@ -117,28 +66,42 @@ export default function AuditLogsView({ onNavigate }: { onNavigate?: (p: string)
   const [blockClicked, setBlockClicked] = useState(false);
   const [alertDismiss, setAlertDismiss] = useState(false);
 
-  const handleNav = (label: string) => {
-    setActiveNav(label);
-    onNavigate?.(label);
-  };
+  // fetch audit logs from backend
+  const { data: fetchedLogs, loading: logsLoading, error: logsError, refetch: refetchLogs } = useApi(async () => {
+    const res = await auditLogService.getAll();
+    return { data: res.data };
+  }, true, []);
 
-  const filtered = ALL_LOGS.filter(l =>
+  const LOGS = (fetchedLogs || []).map((a: any) => ({
+    id: a.id,
+    name: a.user || a.user || "Unknown",
+    role: a.role || "",
+    img: a.avatarUrl || "",
+    activity: a.activityType || a.activity || "",
+    action: a.action || "",
+    department: a.department || "",
+    severity: a.severity === "Normal" ? "Medium" : (a.severity || "Low"),
+    email: a.ipAddress || a.email || "",
+    time: a.timestamp || "",
+  }));
+
+  const filtered = LOGS.filter(l =>
     (severityF === "All" || l.severity === severityF) &&
     (userRoleF === "All" || l.role === userRoleF) &&
     (departmentF   === "All" || l.department === departmentF) &&
     (search === "" ||
-      l.name.toLowerCase().includes(search.toLowerCase()) ||
-      l.id.toLowerCase().includes(search.toLowerCase()) ||
-      l.email.toLowerCase().includes(search.toLowerCase()) ||
-      l.activity.toLowerCase().includes(search.toLowerCase()))
+      (l.name || "").toLowerCase().includes(search.toLowerCase()) ||
+      (l.id || "").toLowerCase().includes(search.toLowerCase()) ||
+      (l.email || "").toLowerCase().includes(search.toLowerCase()) ||
+      (l.activity || "").toLowerCase().includes(search.toLowerCase()))
   );
 
   return (
     <Layout
-      activeNav={activeNav}
-      onNavigate={handleNav}
+      activeNav="Audit Logs"
+      onNavigate={onNavigate}
       topbarTitle="Audit Logs"
-      searchPlaceholder="Search system activities..."
+      searchPlaceholder="Search audit logs..."
       userName="Admin User"
       userRole="Administrator"
       searchValue={search}
@@ -158,12 +121,6 @@ export default function AuditLogsView({ onNavigate }: { onNavigate?: (p: string)
                   </p>
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
-                  <button className="flex items-center gap-1.5 h-9 px-4 border border-[#e2e8f0] bg-white rounded-xl text-[12px] font-bold text-[#475569] hover:bg-[#f8fafc] shadow-sm transition-colors">
-                    <Icon name="tune" className="text-[16px]" />Filters
-                  </button>
-                  <button className="flex items-center gap-1.5 h-9 px-4 border border-[#e2e8f0] bg-white rounded-xl text-[12px] font-bold text-[#475569] hover:bg-[#f8fafc] shadow-sm transition-colors">
-                    <Icon name="ios_share" className="text-[16px]" />Export Logs
-                  </button>
                   <button className="flex items-center gap-1.5 h-9 px-5 bg-[#1e3a8a] hover:bg-[#1e40af] text-white rounded-xl text-[12px] font-bold shadow-sm transition-all active:scale-95">
                     <Icon name="download" className="text-[16px]" />Download Report
                   </button>
@@ -173,20 +130,20 @@ export default function AuditLogsView({ onNavigate }: { onNavigate?: (p: string)
               {/* KPI Cards */}
               <div className="grid grid-cols-6 gap-3">
                 {[
-                  { label:"Total Logs",       value:"12.4k", trend:"+12%", up:true,  icon:"database",        bg:"bg-[#e8edf8]", col:"text-[#1e3a8a]",  vals:[4,5,4,6,5,7,8], colors:["bg-[#bfdbfe]","bg-[#bfdbfe]","bg-[#bfdbfe]","bg-[#bfdbfe]","bg-[#bfdbfe]","bg-[#bfdbfe]","bg-[#1e3a8a]"] },
-                  { label:"Security Alerts",  value:"03",    trend:"+1",   up:false, icon:"shield",          bg:"bg-[#fee2e2]", col:"text-[#dc2626]",  vals:[2,3,2,4,3,5,4], colors:["bg-[#fecaca]","bg-[#fecaca]","bg-[#fecaca]","bg-[#ef4444]","bg-[#fecaca]","bg-[#ef4444]","bg-[#dc2626]"] },
-                  { label:"Failed Logins",    value:"24",    trend:"+5",   up:false, icon:"login",           bg:"bg-[#f1f5f9]", col:"text-[#64748b]",  vals:[5,6,4,7,5,6,8], colors:["bg-[#e2e8f0]","bg-[#e2e8f0]","bg-[#e2e8f0]","bg-[#cbd5e1]","bg-[#e2e8f0]","bg-[#cbd5e1]","bg-[#94a3b8]"] },
-                  { label:"Permissions",      value:"18",    trend:"Stable",up:true, icon:"key",             bg:"bg-[#f1f5f9]", col:"text-[#64748b]",  vals:[4,4,5,4,5,4,5], colors:["bg-[#e2e8f0]","bg-[#e2e8f0]","bg-[#e2e8f0]","bg-[#e2e8f0]","bg-[#cbd5e1]","bg-[#e2e8f0]","bg-[#94a3b8]"] },
-                  { label:"Operational",      value:"142",   trend:"+8%",  up:true,  icon:"settings",        bg:"bg-[#e0f2fe]", col:"text-[#0369a1]",  vals:[5,6,7,6,8,7,9], colors:["bg-[#bae6fd]","bg-[#bae6fd]","bg-[#7dd3fc]","bg-[#bae6fd]","bg-[#38bdf8]","bg-[#7dd3fc]","bg-[#0ea5e9]"] },
-                  { label:"Suspicious",       value:"02",    trend:"Safe", up:true,  icon:"verified_user",   bg:"bg-[#e8edf8]", col:"text-[#1e3a8a]",  vals:[1,0,1,0,1,0,1], colors:["bg-[#e2e8f0]","bg-[#f1f5f9]","bg-[#e2e8f0]","bg-[#f1f5f9]","bg-[#cbd5e1]","bg-[#f1f5f9]","bg-[#94a3b8]"] },
+                  { label:"Total Logs",       value:"12.4k",  icon:"database",        bg:"bg-[#e8edf8]", col:"text-[#1e3a8a]",  vals:[4,5,4,6,5,7,8], colors:["bg-[#bfdbfe]","bg-[#bfdbfe]","bg-[#bfdbfe]","bg-[#bfdbfe]","bg-[#bfdbfe]","bg-[#bfdbfe]","bg-[#1e3a8a]"] },
+                  { label:"Security Alerts",  value:"03",     icon:"shield",          bg:"bg-[#fee2e2]", col:"text-[#dc2626]",  vals:[2,3,2,4,3,5,4], colors:["bg-[#fecaca]","bg-[#fecaca]","bg-[#fecaca]","bg-[#ef4444]","bg-[#fecaca]","bg-[#ef4444]","bg-[#dc2626]"] },
+                  { label:"Failed Logins",    value:"24",     icon:"login",           bg:"bg-[#f1f5f9]", col:"text-[#64748b]",  vals:[5,6,4,7,5,6,8], colors:["bg-[#e2e8f0]","bg-[#e2e8f0]","bg-[#e2e8f0]","bg-[#cbd5e1]","bg-[#e2e8f0]","bg-[#cbd5e1]","bg-[#94a3b8]"] },
+                  { label:"Permissions",      value:"18",     icon:"key",             bg:"bg-[#f1f5f9]", col:"text-[#64748b]",  vals:[4,4,5,4,5,4,5], colors:["bg-[#e2e8f0]","bg-[#e2e8f0]","bg-[#e2e8f0]","bg-[#e2e8f0]","bg-[#cbd5e1]","bg-[#e2e8f0]","bg-[#94a3b8]"] },
+                  { label:"Operational",      value:"142",    icon:"settings",        bg:"bg-[#e0f2fe]", col:"text-[#0369a1]",  vals:[5,6,7,6,8,7,9], colors:["bg-[#bae6fd]","bg-[#bae6fd]","bg-[#7dd3fc]","bg-[#bae6fd]","bg-[#38bdf8]","bg-[#7dd3fc]","bg-[#0ea5e9]"] },
+                  { label:"Suspicious",       value:"02",     icon:"verified_user",   bg:"bg-[#e8edf8]", col:"text-[#1e3a8a]",  vals:[1,0,1,0,1,0,1], colors:["bg-[#e2e8f0]","bg-[#f1f5f9]","bg-[#e2e8f0]","bg-[#f1f5f9]","bg-[#cbd5e1]","bg-[#f1f5f9]","bg-[#94a3b8]"] },
                 ].map(c => (
                   <div key={c.label} className="bg-white rounded-2xl p-4 border border-[#e2e8f0] shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between">
                       <div className={`w-8 h-8 ${c.bg} rounded-lg flex items-center justify-center`}>
                         <Icon name={c.icon} className={`${c.col} text-[17px]`} />
                       </div>
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${c.up ? "bg-[#dcfce7] text-[#16a34a]" : c.trend === "Stable" || c.trend === "Safe" ? "bg-[#f1f5f9] text-[#64748b]" : "bg-[#fee2e2] text-[#dc2626]"}`}>
-                        {c.up ? "↑" : "↓"} {c.trend}
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full $`}>
+                        
                       </span>
                     </div>
                     <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mt-2">{c.label}</div>
@@ -245,13 +202,23 @@ export default function AuditLogsView({ onNavigate }: { onNavigate?: (p: string)
               <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
                 <table className="w-full">
                   <thead>
-                    <tr className="bg-[#f8fafc] border-b border-[#f1f5f9]">
-                      {["EVENT ID","USER","ACTIVITY TYPE","DEPARTMENT","SEVERITY","EMAIL","TIME"].map(h => (
-                        <th key={h} className="px-4 py-3 text-left text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider">{h}</th>
-                      ))}
-                    </tr>
+                      <tr className="bg-[#f8fafc] border-b border-[#f1f5f9]">
+                        {["ID","USER","ACTIVITY TYPE","DEPARTMENT","SEVERITY","EMAIL","TIME"].map(h => (
+                          <th key={h} className="px-4 py-3 text-left text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider">{h}</th>
+                        ))}
+                      </tr>
                   </thead>
                   <tbody>
+                      {logsLoading && (
+                        <tr><td colSpan={7} className="px-4 py-6 text-center text-[13px] text-[#475569]">Loading logs...</td></tr>
+                      )}
+                      {logsError && (
+                        <tr>
+                          <td colSpan={7} className="px-4 py-6 text-center text-[13px] text-[#b91c1c]">
+                            Failed to load logs. <button onClick={() => refetchLogs()} className="ml-3 px-3 py-1 bg-[#1e3a8a] text-white rounded-lg">Retry</button>
+                          </td>
+                        </tr>
+                      )}
                     {filtered.map((log, i) => (
                       <tr key={log.id}
                         className={`border-b border-[#f8fafc] hover:bg-[#f8fafc] transition-all group ${log.severity === "Critical" ? "bg-[#fff8f8]" : ""}`}

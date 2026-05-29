@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Layout, Icon } from "../components/layout/layout.tsx";
+import { useApi } from "../hooks/useApi";
+import { requestService } from "../services/requestService";
 
 // ── Types ────────────────────────────────────
 interface StatCard { icon: string; iconBg: string; iconColor: string; value: string; label: string; barColor: string; barWidth: string; trend?: string }
@@ -8,7 +10,7 @@ interface Request  { id: string; initials: string; name: string; destination: st
 
 // ── Data ─────────────────────────────────────
 const STATS: StatCard[] = [
-  { icon: "directions_car", iconBg: "bg-[#e8edf8]",  iconColor: "text-[#1e3a8a]", value: "120", label: "Total Vehicles",   barColor: "bg-[#1e3a8a]",  barWidth: "85%", trend: "+4.2%" },
+  { icon: "directions_car", iconBg: "bg-[#e8edf8]",  iconColor: "text-[#1e3a8a]", value: "120", label: "Total Vehicles",   barColor: "bg-[#1e3a8a]",  barWidth: "85%"},
   { icon: "check_circle",   iconBg: "bg-[#dcfce7]",  iconColor: "text-[#16a34a]", value: "67",  label: "Available",        barColor: "bg-[#22c55e]",  barWidth: "56%" },
   { icon: "commute",        iconBg: "bg-[#e0f2fe]",  iconColor: "text-[#0369a1]", value: "45",  label: "In Use",           barColor: "bg-[#0ea5e9]",  barWidth: "38%" },
   { icon: "pending_actions",iconBg: "bg-[#fff7ed]",  iconColor: "text-[#c2410c]", value: "18",  label: "Pending Requests", barColor: "bg-[#f97316]",  barWidth: "15%" },
@@ -21,11 +23,7 @@ const SCHEDULES: Schedule[] = [
   { month: "OCT", day: "15", title: "Logistics Su...",  sub: "Isuzu Truck - Warehouse",       time: "09:00", accentColor: "#c2410c" },
 ];
 
-const REQUESTS: Request[] = [
-  { id: "#REQ-2048", initials: "SD", name: "Sarah Donovan", destination: "Corporate Park, Sector 4", vehicle: "Audi A6",    driver: "Mark Wilson",     date: "Oct 14, 2023", status: "Approved", priority: "HIGH"   },
-  { id: "#REQ-2049", initials: "RK", name: "Robert Kim",    destination: "Downtown Branch",           vehicle: "Unassigned", driver: "Awaiting Dispatch",date: "Oct 14, 2023", status: "Pending",  priority: "MEDIUM" },
-  { id: "#REQ-2050", initials: "LM", name: "Lisa Manning",  destination: "East Coast Terminal",       vehicle: "Ford F-150", driver: "Alan Parker",     date: "Oct 15, 2023", status: "Approved", priority: "LOW"    },
-];
+// Requests will be loaded from backend
 
 // ── Sub-components ───────────────────────────
 function StatusBadge({ status }: { status: Request["status"] }) {
@@ -105,16 +103,45 @@ function UsageChart() {
 export default function Dashboard({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const [statusFilter, setStatusFilter] = useState("All Status");
 
+  // fetch requests from backend and map to UI shape
+  const { data: fetchedRequests, loading: reqLoading, error: reqError, refetch } = useApi(async () => {
+    const res = await requestService.getAll();
+    return { data: res.data };
+  }, true, []);
+
+  const requests: Request[] = (fetchedRequests || []).map((r: any) => {
+    const name = r.employee || r.fullName || "Unknown";
+    const initials = name.split(" ").map((p:string)=>p[0]).slice(0,2).join("").toUpperCase() || "";
+    const vehicle = r.vehicleModel || "Unassigned";
+    const driver = r.driverName || (vehicle === "Unassigned" ? "Awaiting Dispatch" : "Unassigned");
+    const statusMap: Record<string,string> = { APPROVED: "Approved", PENDING: "Pending", REJECTED: "Rejected", ONGOING: "Approved", COMPLETED: "Approved" };
+    const status = statusMap[(r.status || "").toUpperCase()] || (r.status || "Pending");
+    const priorityRaw = (r.priority || "").toUpperCase();
+    const priority = priorityRaw === "HIGH" || priorityRaw === "URGENT" ? "HIGH" : (priorityRaw === "NORMAL" ? "MEDIUM" : "LOW");
+
+    return {
+      id: r.id,
+      initials,
+      name,
+      destination: r.destination || r.destinationAddress || "",
+      vehicle,
+      driver,
+      date: r.date || r.dateLabel || "",
+      status: status as Request["status"],
+      priority: priority as Request["priority"],
+    } as Request;
+  });
+
   const filtered = statusFilter === "All Status"
-    ? REQUESTS
-    : REQUESTS.filter(r => r.status === statusFilter);
+    ? requests
+    : requests.filter(r => r.status === statusFilter);
 
   return (
     <Layout
       activeNav="Dashboard"
       onNavigate={onNavigate}
-      topbarTitle="Administrator Dashboard"
-      searchPlaceholder="Global Search..."
+      topbarTitle="Dashboard"
+      searchPlaceholder="Search dashboard..."
     >
       <div className="p-6 space-y-5 animate-fadein">
         {/* ── STAT CARDS ── */}
@@ -136,9 +163,7 @@ export default function Dashboard({ onNavigate }: { onNavigate?: (page: string) 
                 <div className="text-[22px] font-bold text-[#0f172a] leading-tight">{card.value}</div>
                 <div className="text-[12px] text-[#64748b] font-medium mt-0.5">{card.label}</div>
               </div>
-              <div className="mt-3 h-[3px] w-full bg-[#f1f5f9] rounded-full overflow-hidden">
-                <div className={`${card.barColor} h-full rounded-full transition-all`} style={{ width: card.barWidth }} />
-              </div>
+              
             </div>
           ))}
         </div>
@@ -226,6 +251,18 @@ export default function Dashboard({ onNavigate }: { onNavigate?: (page: string) 
           </div>
 
           <div className="overflow-x-auto">
+            {reqLoading && (
+              <div className="px-6 py-4 text-[13px] text-[#475569] flex items-center gap-2">
+                <Icon name="hourglass_top" className="text-[18px] text-[#1e3a8a]" />
+                Loading requests...
+              </div>
+            )}
+            {reqError && (
+              <div className="px-6 py-4 text-[13px] text-[#b91c1c] flex items-center justify-between">
+                <div className="flex items-center gap-2"><Icon name="error" className="text-red-600 text-[18px]" />Failed loading requests.</div>
+                <button onClick={() => refetch()} className="ml-4 px-3 py-1.5 bg-[#1e3a8a] text-white rounded-lg">Retry</button>
+              </div>
+            )}
             <table className="w-full">
               <thead>
                 <tr className="bg-[#f8fafc]">
@@ -264,7 +301,7 @@ export default function Dashboard({ onNavigate }: { onNavigate?: (page: string) 
                     <td className="px-5 py-3.5"><StatusBadge status={req.status} /></td>
                     <td className="px-5 py-3.5"><PriorityBadge priority={req.priority} /></td>
                     <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-1">
                         <button className="w-7 h-7 rounded-lg hover:bg-[#eff6ff] flex items-center justify-center transition-colors">
                           <Icon name="visibility" className="text-[#1e3a8a] text-[16px]" />
                         </button>

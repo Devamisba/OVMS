@@ -5,7 +5,7 @@ import {
   X,
   MailOpen,
 } from "lucide-react";
-import { type SystemNotification } from "../types.ts";
+import type { SystemNotification } from "../types/index.ts";
 import { Layout } from "../components/layout/layout.tsx";
 
 interface NotificationProps {
@@ -36,7 +36,7 @@ export default function Notification({
     <Layout
       activeNav="Notification Center"
       onNavigate={onNavigate}
-      topbarTitle="Operational Notification Center"
+      topbarTitle="Notification Center"
       searchPlaceholder="Search notifications..."
     >
       <div className="max-w-4xl mx-auto p-6 space-y-6 animate-in fade-in duration-200">
