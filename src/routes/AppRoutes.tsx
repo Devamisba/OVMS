@@ -32,7 +32,11 @@ import ApproverHistory from "@/pages/approver/history";
 import DriverDashboard from "@/pages/driver/dashboard";
 
 // GAHRD Pages
-import GAHRDDashboard from "@/pages/gahrd/dashboard";
+import GAHRDDashboard     from "@/pages/gahrd/dashboard";
+import GAHRDDriver        from "@/pages/gahrd/driver";
+import GAHRDRequests      from "@/pages/gahrd/requests";
+import GAHRDHistory       from "@/pages/gahrd/history";
+import GAHRDNotifications from "@/pages/gahrd/notifications";
 
 export default function AppRoutes() {
   return (
@@ -41,35 +45,39 @@ export default function AppRoutes() {
 
       <Route element={<ProtectedRoutes />}>
         {/* Admin Routes */}
-        <Route path="/admin/dashboard" element={<Dashboard />} />
-        <Route path="/admin/drivers" element={<Driver />} />
-        <Route path="/admin/requests" element={<Request />} />
-        <Route path="/admin/reports" element={<Reports />} />
-        <Route path="/admin/users" element={<User />} />
-        <Route path="/admin/vehicles" element={<Vehicle />} />
-        <Route path="/admin/audit" element={<Audit />} />
-        <Route path="/admin/roles" element={<Roles />} />
+        <Route path="/admin/dashboard"     element={<Dashboard />} />
+        <Route path="/admin/drivers"       element={<Driver />} />
+        <Route path="/admin/requests"      element={<Request />} />
+        <Route path="/admin/reports"       element={<Reports />} />
+        <Route path="/admin/users"         element={<User />} />
+        <Route path="/admin/vehicles"      element={<Vehicle />} />
+        <Route path="/admin/audit"         element={<Audit />} />
+        <Route path="/admin/roles"         element={<Roles />} />
         <Route path="/admin/notifications" element={<AdminNotifications />} />
-        <Route path="/admin/schedules" element={<Schedules />} />
-        <Route path="/admin/settings" element={<Settings />} />
+        <Route path="/admin/schedules"     element={<Schedules />} />
+        <Route path="/admin/settings"      element={<Settings />} />
 
         {/* Employee Routes */}
-        <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+        <Route path="/employee/dashboard"     element={<EmployeeDashboard />} />
         <Route path="/employee/createrequest" element={<CreateRequest />} />
-        <Route path="/employee/myrequests" element={<MyRequests />} />
+        <Route path="/employee/myrequests"    element={<MyRequests />} />
         <Route path="/employee/notifications" element={<EmployeeNotifications />} />
-        <Route path="/employee/profile" element={<EmployeeProfile />} />
+        <Route path="/employee/profile"       element={<EmployeeProfile />} />
 
         {/* Approver Routes */}
         <Route path="/approver/dashboard" element={<ApproverDashboard onNavigate={() => {}} />} />
-        <Route path="/approver/requests" element={<ApproverRequests />} />
-        <Route path="/approver/history" element={<ApproverHistory />} />
+        <Route path="/approver/requests"  element={<ApproverRequests />} />
+        <Route path="/approver/history"   element={<ApproverHistory />} />
 
         {/* Driver Routes */}
         <Route path="/driver/dashboard" element={<DriverDashboard />} />
 
-        {/* GAHRD Routes */}
-        <Route path="/gahrd/dashboard" element={<GAHRDDashboard />} />
+        {/* GAHRD Routes — no onNavigate prop so Layout uses internal routing */}
+        <Route path="/gahrd/dashboard"     element={<GAHRDDashboard />} />
+        <Route path="/gahrd/driver"        element={<GAHRDDriver />} />
+        <Route path="/gahrd/requests"      element={<GAHRDRequests />} />
+        <Route path="/gahrd/history"       element={<GAHRDHistory />} />
+        <Route path="/gahrd/notifications" element={<GAHRDNotifications />} />
       </Route>
 
       <Route path="/" element={<Navigate to="/login" replace />} />
@@ -77,4 +85,3 @@ export default function AppRoutes() {
     </Routes>
   );
 }
-

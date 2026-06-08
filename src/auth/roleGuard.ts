@@ -51,6 +51,10 @@ export function canAccessRoute(userRole: UserRole | null, route: string): GuardR
 
     '/gahrd': ['gahrd', 'admin'],
     '/gahrd/dashboard': ['gahrd', 'admin'],
+    '/gahrd/driver': ['gahrd', 'admin'],
+    '/gahrd/requests': ['gahrd', 'admin'],
+    '/gahrd/history': ['gahrd', 'admin'],
+    '/gahrd/notifications': ['gahrd', 'admin'],
   };
 
   const allowedRoles = routeAccess[route] || [];

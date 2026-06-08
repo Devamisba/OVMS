@@ -1,7 +1,30 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Layout } from '@/components/layout/RoleLayout';
-import type { HistoryItem, Priority } from '@/config/data';
-import { HISTORY_ITEMS } from '@/config/data';
+import { REQUESTS } from '@/config/data';
+import type { Priority } from '@/config/data';
+
+interface HistoryItem {
+  id: string;
+  reqId: string;
+  priority: Priority;
+  title: string;
+  requester: string;
+  datetime: string;
+  status: "APPROVED" | "REJECTED";
+  statusLabel: string;
+}
+
+const HISTORY_ITEMS: HistoryItem[] = REQUESTS.map(r => ({
+  id: r.id,
+  reqId: r.reqId,
+  priority: r.priority,
+  title: r.purpose,
+  requester: r.requesterName,
+  datetime: `${r.date}, ${r.time}`,
+  status: r.id === "2" ? "REJECTED" : "APPROVED",
+  statusLabel: r.id === "2" ? "Rejected by Dept Head" : "Approved by Dept Head",
+}));
+
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 function IconList() {
@@ -243,7 +266,7 @@ export default function HistoryPage() {
               <p className="text-[13px] text-[#64748b] mt-1">Try adjusting your filter or search.</p>
             </div>
           ) : (
-            filtered.map((item) => <HistoryRow key={item.id} item={item} />)
+            filtered.map((item: HistoryItem) => <HistoryRow key={item.id} item={item} />)
           )}
         </div>
       </div>

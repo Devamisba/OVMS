@@ -1,8 +1,40 @@
 import React, { useState } from 'react';
 import { Layout } from '@/components/layout/RoleLayout';
 import { PriorityBadge } from '@/components/layout/PriorityBadge';
-import type { PendingRequest } from '@/config/data';
-import { PENDING_REQUESTS } from '@/config/data';
+import { REQUESTS } from '@/config/data';
+
+interface PendingRequest {
+  id: string;
+  reqId: string;
+  requesterName: string;
+  role: string;
+  department: string;
+  avatar: string;
+  priority: string;
+  destination: string;
+  date: string;
+  time: string;
+  vehicleType: string;
+  purpose: string;
+  isActive: boolean;
+}
+
+const PENDING_REQUESTS: PendingRequest[] = REQUESTS.map(r => ({
+  id: r.id,
+  reqId: r.reqId,
+  requesterName: r.requesterName,
+  role: r.role,
+  department: r.role,
+  avatar: r.avatar,
+  priority: r.priority as any,
+  destination: r.destination,
+  date: r.date,
+  time: r.time,
+  vehicleType: r.vehicle,
+  purpose: r.purpose,
+  isActive: true,
+}));
+
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 function IconCalendar() {
@@ -115,7 +147,7 @@ function RequestCard({
           </div>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <PriorityBadge priority={req.priority} />
+          <PriorityBadge priority={req.priority as any} />
           <span className="text-[11px] text-[#94a3b8] font-medium">ID: {req.reqId}</span>
         </div>
       </div>

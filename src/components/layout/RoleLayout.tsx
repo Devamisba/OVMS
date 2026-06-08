@@ -7,7 +7,7 @@ export { Sidebar } from "./Sidebar";
 export { Topbar } from "./Topbar";
 
 export function Layout({ activeNav, onNavigate, topbarTitle, userName, userRole, searchPlaceholder, searchValue, onSearchChange, children }:
-  { activeNav: string; onNavigate?: (p:string)=>void; topbarTitle: string; userName?: string; userRole?: string; searchPlaceholder?: string; searchValue?: string; onSearchChange?: (value: string) => void; children: ReactNode }) {
+  { activeNav: string; onNavigate?: (p:string)=>void; topbarTitle: string; userName?: string; userRole?: string; searchPlaceholder?: string; searchValue?: string; onSearchChange?: (value:string)=>void; children: ReactNode }) {
   const navigate = useNavigate();
 
   const handleNavigate = (page: string) => {
@@ -19,72 +19,43 @@ export function Layout({ activeNav, onNavigate, topbarTitle, userName, userRole,
     const role = userRole?.toLowerCase() || "administrator";
     if (role === "employee") {
       switch (page) {
-        case "Dashboard":
-          navigate("/employee/dashboard");
-          break;
-        case "Create Request":
-          navigate("/employee/createrequest");
-          break;
-        case "My Requests":
-          navigate("/employee/myrequests");
-          break;
-        case "Notifications":
-          navigate("/employee/notifications");
-          break;
-        case "My Profile":
-          navigate("/employee/profile");
-          break;
-        case "Settings":
-          // Can stay on same page or go to settings
-          break;
-        case "Logout":
-          navigate("/login");
-          break;
-        default:
-          break;
+        case "Dashboard":       navigate("/employee/dashboard"); break;
+        case "Create Request":  navigate("/employee/createrequest"); break;
+        case "My Requests":     navigate("/employee/myrequests"); break;
+        case "Notifications":   navigate("/employee/notifications"); break;
+        case "My Profile":      navigate("/employee/profile"); break;
+        default: break;
+      }
+    } else if (role === "ga/hrd" || role === "gahrd") {
+      switch (page) {
+        case "Dashboard":           navigate("/gahrd/dashboard"); break;
+        case "Driver Availability": navigate("/gahrd/driver"); break;
+        case "Driver Assignment":   navigate("/gahrd/requests"); break;
+        case "History":             navigate("/gahrd/history"); break;
+        case "Notifications":       navigate("/gahrd/notifications"); break;
+        default: break;
+      }
+    } else if (role === "approver") {
+      switch (page) {
+        case "Dashboard":         navigate("/approver/dashboard"); break;
+        case "Pending Requests":  navigate("/approver/requests"); break;
+        case "History":           navigate("/approver/historys"); break;
+        default: break;
       }
     } else {
       switch (page) {
-        case "Dashboard":
-          navigate("/admin/dashboard");
-          break;
-        case "Vehicle Management":
-          navigate("/admin/vehicles");
-          break;
-        case "Driver Management":
-          navigate("/admin/drivers");
-          break;
-        case "Request Monitoring":
-          navigate("/admin/requests");
-          break;
-        case "Vehicle Schedule":
-          navigate("/admin/schedules");
-          break;
-        case "Reports & Analytics":
-          navigate("/admin/reports");
-          break;
-        case "User Management":
-          navigate("/admin/users");
-          break;
-        case "Role Management":
-          navigate("/admin/roles");
-          break;
-        case "Notification Center":
-          navigate("/admin/notifications");
-          break;
-        case "Audit Logs":
-          navigate("/admin/audit");
-          break;
-        case "System Settings":
-          navigate("/admin/settings");
-          break;
-        case "Settings":
-          break;
-        case "Logout":
-          navigate("/login");
-          break;
-        default:
-          break;
+        case "Dashboard":            navigate("/admin/dashboard"); break;
+        case "Vehicle Management":   navigate("/admin/vehicles"); break;
+        case "Driver Management":    navigate("/admin/drivers"); break;
+        case "Request Monitoring":   navigate("/admin/requests"); break;
+        case "Vehicle Schedule":     navigate("/admin/schedules"); break;
+        case "Reports & Analytics":  navigate("/admin/reports"); break;
+        case "User Management":      navigate("/admin/users"); break;
+        case "Role Management":      navigate("/admin/roles"); break;
+        case "Notification Center":  navigate("/admin/notifications"); break;
+        case "Audit Logs":           navigate("/admin/audit"); break;
+        case "System Settings":      navigate("/admin/settings"); break;
+        default: break;
       }
     }
   };

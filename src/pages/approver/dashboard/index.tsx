@@ -1,6 +1,45 @@
 import { Layout, Icon } from "@/components/layout/RoleLayout";
-import type { ActivityItem, PendingRequest } from "@/config/data";
-import { ACTIVITY_FEED, DASHBOARD_PENDING } from "@/config/data";
+import { REQUESTS } from "@/config/data";
+
+interface PendingRequest {
+  id: string;
+  reqId: string;
+  requesterName: string;
+  role: string;
+  department: string;
+  avatar: string;
+  priority: string;
+  destination: string;
+  schedule: string;
+  passengers: string;
+}
+
+interface ActivityItem {
+  id: string;
+  type: "approved" | "new" | "rejected";
+  text: string;
+  time: string;
+}
+
+const DASHBOARD_PENDING: PendingRequest[] = REQUESTS.map(r => ({
+  id: r.id,
+  reqId: r.reqId,
+  requesterName: r.requesterName,
+  role: r.role,
+  department: "Operations",
+  avatar: r.avatar,
+  priority: r.priority,
+  destination: r.destination,
+  schedule: `${r.date}, ${r.time}`,
+  passengers: "1 Passenger",
+}));
+
+const ACTIVITY_FEED: ActivityItem[] = [
+  { id: "1", type: "approved", text: "Admin approved Request RQ-4421", time: "2 mins ago" },
+  { id: "2", type: "new", text: "Marcus Chen submitted a new request", time: "10 mins ago" },
+  { id: "3", type: "rejected", text: "Approver rejected Request RQ-3312", time: "1 hour ago" },
+];
+
 
 // ── Priority badge ─────────────────────────────────────────────────────────
 function PriBadge({ p }: { p: string }) {
@@ -174,7 +213,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate: (p: string) 
               </button>
             </div>
             <div className="flex flex-col gap-4">
-              {DASHBOARD_PENDING.map((req) => (
+              {DASHBOARD_PENDING.map((req: PendingRequest) => (
                 <PendingRow key={req.id} req={req} />
               ))}
             </div>
@@ -187,7 +226,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate: (p: string) 
               <span className="text-[15px] font-bold text-[#0f172a]">Activity Feed</span>
             </div>
             <div>
-              {ACTIVITY_FEED.map((item) => (
+              {ACTIVITY_FEED.map((item: ActivityItem) => (
                 <ActivityRow key={item.id} item={item} />
               ))}
             </div>

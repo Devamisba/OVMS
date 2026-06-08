@@ -67,9 +67,11 @@ export function Sidebar({ activeNav, onNavigate }: { activeNav: string; onNaviga
 
   // GAHRD menu
   const gahrdMenu = [
-    { icon: "dashboard", label: "Dashboard", path: "/gahrd/dashboard" },
-    { icon: "person", label: "Driver Management", path: "/gahrd/dashboard" },
-    { icon: "group", label: "User Management", path: "/gahrd/dashboard" },
+    { icon: "dashboard",       label: "Dashboard",          path: "/gahrd/dashboard" },
+    { icon: "directions_car",  label: "Driver Availability", path: "/gahrd/driver" },
+    { icon: "assignment",      label: "Driver Assignment",   path: "/gahrd/requests" },
+    { icon: "history",         label: "History",             path: "/gahrd/history" },
+    { icon: "notifications",   label: "Notifications",       path: "/gahrd/notifications" },
   ];
 
   // Admin menu navigation
